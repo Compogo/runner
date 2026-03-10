@@ -54,8 +54,7 @@ type runner struct {
 
 	// tasks stores running tasks indexed by both name and value.
 	// Using Mapper allows efficient lookup by name and deduplication.
-	tasks   types.Mapper[*Task]
-	rwMutex sync.RWMutex
+	tasks types.Mapper[*Task]
 
 	closer closer.Closer
 	logger logger.Logger
@@ -63,6 +62,8 @@ type runner struct {
 	// middleware holds the chain of middlewares that wrap all tasks.
 	// They are applied in the order they were added via Use().
 	middleware []Middleware
+
+	rwMutex sync.RWMutex
 }
 
 // NewRunner creates a new Runner instance.
@@ -86,6 +87,9 @@ func NewRunner(closer closer.Closer, logger logger.Logger) Runner {
 //	r.Use(loggerMiddleware, metricsMiddleware)
 //	// Result: metricsMiddleware(loggerMiddleware(task))
 func (r *runner) Use(middlewares ...Middleware) {
+	r.rwMutex.Lock()
+	defer r.rwMutex.Unlock()
+
 	r.middleware = append(r.middleware, middlewares...)
 }
 
@@ -94,9 +98,10 @@ func (r *runner) Use(middlewares ...Middleware) {
 // Returns the first error encountered during task shutdown.
 func (r *runner) Close() (err error) {
 	r.rwMutex.RLock()
-	defer r.rwMutex.RUnlock()
+	tasks := r.tasks
+	r.rwMutex.RUnlock()
 
-	for _, task := range r.tasks.All() {
+	for _, task := range tasks.All() {
 		if err = r.StopTask(task); err != nil {
 			return err
 		}
