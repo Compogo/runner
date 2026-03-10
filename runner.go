@@ -164,7 +164,7 @@ func (r *runner) RunTask(task *Task) error {
 // It looks up the task in the mapper and delegates to StopTask.
 // Returns TaskUndefinedError if no task with the given name exists.
 func (r *runner) StopTaskByName(name string) error {
-	if r.HasTaskByName(name) {
+	if !r.HasTaskByName(name) {
 		return fmt.Errorf("[runner] task '%s': %w", name, TaskUndefinedError)
 	}
 
