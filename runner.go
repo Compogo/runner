@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime/debug"
 	"sync"
 
 	"github.com/Compogo/compogo/closer"
@@ -34,6 +33,19 @@ type Runner interface {
 	// StopTaskByName stops a task identified by its name.
 	// Returns TaskUndefinedError if no task with the given name exists.
 	StopTaskByName(name string) error
+
+	// HasTaskByName checks if a task with the given name is currently running.
+	// Returns true if the task exists, false otherwise.
+	HasTaskByName(name string) bool
+
+	// HasTask checks if the specific task instance is currently running.
+	// This is useful for checking against a known task pointer.
+	HasTask(task *Task) bool
+
+	// Use registers one or more middlewares that will wrap all tasks
+	// executed by this runner. Middlewares are applied in the order they are added,
+	// with the last added middleware being the outermost wrapper.
+	Use(middlewares ...Middleware)
 }
 
 // runner is the internal implementation of the Runner interface.
@@ -47,6 +59,10 @@ type runner struct {
 
 	closer closer.Closer
 	logger logger.Logger
+
+	// middleware holds the chain of middlewares that wrap all tasks.
+	// They are applied in the order they were added via Use().
+	middleware []Middleware
 }
 
 // NewRunner creates a new Runner instance.
@@ -58,6 +74,19 @@ func NewRunner(closer closer.Closer, logger logger.Logger) Runner {
 		closer: closer,
 		logger: logger,
 	}
+}
+
+// Use registers one or more middlewares that will wrap all tasks
+// executed by this runner. Middlewares are applied in the order they are added,
+// meaning the first middleware added will be the innermost wrapper,
+// and the last middleware added will be the outermost wrapper.
+//
+// Example:
+//
+//	r.Use(loggerMiddleware, metricsMiddleware)
+//	// Result: metricsMiddleware(loggerMiddleware(task))
+func (r *runner) Use(middlewares ...Middleware) {
+	r.middleware = append(r.middleware, middlewares...)
 }
 
 // Close stops all running tasks and waits for their completion.
@@ -107,28 +136,22 @@ func (r *runner) RunTask(task *Task) error {
 
 	task.ctx, task.cancelFunc = context.WithCancel(r.closer.GetContext())
 
+	process := task.process
+	for _, middleware := range r.middleware {
+		process = middleware.Middleware(task, process)
+	}
+
 	r.wg.Add(1)
-	go func(task *Task) {
+	go func(task *Task, process Process) {
 		defer r.wg.Done()
 		defer func() {
 			if err := r.StopTaskByName(task.Name()); err != nil {
 				r.logger.Errorf("task '%s' remove failed: %w", task.Name(), err)
 			}
 		}()
-		defer func() {
-			if err := recover(); err != nil {
-				r.logger.Errorf("task '%s' panic: %s\n%s", task.Name(), err, debug.Stack())
-			}
-		}()
 
-		r.logger.Infof("task '%s' running", task.Name())
-
-		if err := task.process.Process(task.ctx); err != nil {
-			r.logger.Errorf("task '%s' error: %s\n%s", task.Name(), err, debug.Stack())
-		}
-
-		r.logger.Infof("task '%s' shutdown", task.Name())
-	}(task)
+		_ = process.Process(task.ctx)
+	}(task, process)
 
 	return nil
 }
@@ -167,4 +190,25 @@ func (r *runner) StopTask(task *Task) error {
 	r.tasks.RemoveByValue(task)
 
 	return nil
+}
+
+// HasTaskByName checks if a task with the given name is currently running.
+// It acquires a read lock to safely check the internal task map.
+// Returns true if a task with that name exists, otherwise false.
+func (r *runner) HasTaskByName(name string) bool {
+	r.rwMutex.RLock()
+	defer r.rwMutex.RUnlock()
+
+	return r.tasks.HasByKey(name)
+}
+
+// HasTask checks if the specific task instance is currently running.
+// This is useful for verifying the state of a task you have a reference to,
+// especially after operations like RunTask or StopTask.
+// Returns true if the exact task is found, otherwise false.
+func (r *runner) HasTask(task *Task) bool {
+	r.rwMutex.RLock()
+	defer r.rwMutex.RUnlock()
+
+	return r.tasks.HasByValue(task)
 }
