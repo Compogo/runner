@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -130,12 +129,12 @@ func (r *runner) RunTasks(tasks ...*Task) (err error) {
 // closer's context, and it's launched in a goroutine.
 // Returns TaskAlreadyExistsError if a task with the same pointer is already running.
 func (r *runner) RunTask(task *Task) error {
-	r.rwMutex.Lock()
-	defer r.rwMutex.Unlock()
-
-	if r.tasks.HasByValue(task) {
+	if r.HasTask(task) {
 		return fmt.Errorf("[runner] task '%s': %w", task.name, TaskAlreadyExistsError)
 	}
+
+	r.rwMutex.Lock()
+	defer r.rwMutex.Unlock()
 
 	r.tasks.Add(task)
 
@@ -165,19 +164,12 @@ func (r *runner) RunTask(task *Task) error {
 // It looks up the task in the mapper and delegates to StopTask.
 // Returns TaskUndefinedError if no task with the given name exists.
 func (r *runner) StopTaskByName(name string) error {
-	r.rwMutex.RLock()
-
-	task, err := r.tasks.Get(name)
-	if errors.Is(err, types.DoesNotExistError) {
-		r.rwMutex.RUnlock()
+	if r.HasTaskByName(name) {
 		return fmt.Errorf("[runner] task '%s': %w", name, TaskUndefinedError)
 	}
 
-	if err != nil {
-		r.rwMutex.RUnlock()
-		return fmt.Errorf("[runner] task '%s': %w", name, err)
-	}
-
+	r.rwMutex.RLock()
+	task, _ := r.tasks.Get(name)
 	r.rwMutex.RUnlock()
 
 	return r.StopTask(task)
