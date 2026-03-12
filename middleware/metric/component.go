@@ -21,13 +21,14 @@ import (
 //	    metric.Component,  // ← adds Prometheus metrics to all tasks
 //	)
 var Component = &component.Component{
+	Name: "runner.metric",
 	Dependencies: component.Components{
 		runner.Component,
 	},
 	Init: component.StepFunc(func(container container.Container) error {
 		return container.Provide(NewMetric)
 	}),
-	PreRun: component.StepFunc(func(container container.Container) error {
+	PreExecute: component.StepFunc(func(container container.Container) error {
 		return container.Invoke(func(r runner.Runner, middleware *Metric) {
 			r.Use(middleware)
 		})

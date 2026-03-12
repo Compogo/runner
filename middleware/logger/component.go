@@ -19,13 +19,14 @@ import (
 //	    logger.Component,  // ← adds lifecycle logging to all tasks
 //	)
 var Component = &component.Component{
+	Name: "runner.logger",
 	Dependencies: component.Components{
 		runner.Component,
 	},
 	Init: component.StepFunc(func(container container.Container) error {
 		return container.Provide(NewLogger)
 	}),
-	PreRun: component.StepFunc(func(container container.Container) error {
+	PreExecute: component.StepFunc(func(container container.Container) error {
 		return container.Invoke(func(r runner.Runner, middleware *Logger) {
 			r.Use(middleware)
 		})

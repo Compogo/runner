@@ -72,7 +72,7 @@ type runner struct {
 func NewRunner(closer closer.Closer, logger logger.Logger) Runner {
 	return &runner{
 		closer: closer,
-		logger: logger,
+		logger: logger.GetLogger("runner"),
 	}
 }
 

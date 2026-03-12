@@ -17,7 +17,7 @@ type Recover struct {
 // NewRecover creates a new Recover middleware instance.
 // The provided logger is used to log panic details including stack traces.
 func NewRecover(logger logger.Logger) *Recover {
-	return &Recover{logger: logger}
+	return &Recover{logger: logger.GetLogger("runner.middleware.recover")}
 }
 
 // Middleware wraps a task's process function with panic recovery.

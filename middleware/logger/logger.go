@@ -18,7 +18,7 @@ type Logger struct {
 // NewLogger creates a new Logger middleware instance.
 // The provided logger is used to output task lifecycle messages.
 func NewLogger(logger logger.Logger) *Logger {
-	return &Logger{logger: logger}
+	return &Logger{logger: logger.GetLogger("runner.middleware.logger")}
 }
 
 // Middleware wraps a task's process function with lifecycle logging.

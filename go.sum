@@ -2,6 +2,8 @@ github.com/Compogo/compogo v0.0.15 h1:UpOCQ4HTD8e5KUYXUoHavUDTQ/Ji1uWfN1KbBddVsV
 github.com/Compogo/compogo v0.0.15/go.mod h1:LbPhr7u4g11Lv8c9tifDnD7aJf3nNRhdsz1LlMdMGcY=
 github.com/Compogo/compogo v0.0.16 h1:bWPMkYMKr5E94N4poHh3DX8EnmmoprL/h0amQCk0wrQ=
 github.com/Compogo/compogo v0.0.16/go.mod h1:LbPhr7u4g11Lv8c9tifDnD7aJf3nNRhdsz1LlMdMGcY=
+github.com/Compogo/compogo v0.0.17 h1:aoeWoVJOIQb5wRwAgd34VI4+stPAZIh6KqVr6siFUBQ=
+github.com/Compogo/compogo v0.0.17/go.mod h1:LbPhr7u4g11Lv8c9tifDnD7aJf3nNRhdsz1LlMdMGcY=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
