@@ -8,7 +8,7 @@ import (
 
 	"github.com/Compogo/compogo/closer"
 	"github.com/Compogo/compogo/logger"
-	"github.com/Compogo/compogo/types"
+	"github.com/Compogo/types/mapper"
 )
 
 // Runner defines the interface for managing concurrent tasks.
@@ -53,7 +53,7 @@ type runner struct {
 
 	// tasks stores running tasks indexed by both name and value.
 	// Using Mapper allows efficient lookup by name and deduplication.
-	tasks types.Mapper[*Task]
+	tasks mapper.Mapper[*Task]
 
 	closer closer.Closer
 	logger logger.Logger
