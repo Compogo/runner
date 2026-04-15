@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -150,7 +151,7 @@ func (r *runner) RunTask(task *Task) error {
 	go func(task *Task, process Process) {
 		defer r.wg.Done()
 		defer func() {
-			if err := r.StopTaskByName(task.Name()); err != nil {
+			if err := r.StopTaskByName(task.Name()); err != nil && !errors.Is(err, TaskUndefinedError) {
 				r.logger.Errorf("task '%s' remove failed: %w", task.Name(), err)
 			}
 		}()
