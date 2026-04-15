@@ -53,7 +53,7 @@ type runner struct {
 
 	// tasks stores running tasks indexed by both name and value.
 	// Using Mapper allows efficient lookup by name and deduplication.
-	tasks mapper.Mapper[*Task]
+	tasks *mapper.Mapper[*Task]
 
 	closer closer.Closer
 	logger logger.Logger
@@ -71,6 +71,7 @@ type runner struct {
 // The logger is used for task lifecycle events and error reporting
 func NewRunner(closer closer.Closer, logger logger.Logger) Runner {
 	return &runner{
+		tasks:  mapper.NewMapper[*Task](),
 		closer: closer,
 		logger: logger.GetLogger("runner"),
 	}
