@@ -1,8 +1,13 @@
 package runner
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 type Task struct {
+	m sync.Mutex
+
 	name        string
 	processFunc ProcessFunc
 
@@ -21,6 +26,9 @@ func NewTask(name string, processFunc ProcessFunc, middlewares ...Middleware) *T
 }
 
 func (task *Task) Process(ctx context.Context) error {
+	task.m.Lock()
+	defer task.m.Unlock()
+
 	task.ctx, task.cancelFunc = context.WithCancel(ctx)
 	defer task.cancelFunc()
 
@@ -37,6 +45,9 @@ func (task *Task) Name() string {
 }
 
 func (task *Task) Close() error {
+	task.m.Lock()
+	defer task.m.Unlock()
+
 	if task.cancelFunc != nil {
 		task.cancelFunc()
 	}
