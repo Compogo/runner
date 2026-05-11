@@ -2,28 +2,44 @@ package runner
 
 import "context"
 
-// Task represents a named executable unit managed by the Runner.
-// Each Task has its own lifecycle and can be started and stopped independently.
 type Task struct {
-	name string
+	name        string
+	processFunc ProcessFunc
 
 	ctx        context.Context
 	cancelFunc context.CancelFunc
-	process    Process
+
+	middlewares []Middleware
 }
 
-// NewTask creates a new Task with the given name and process.
-// The name is used for logging and stopping the task by name.
-func NewTask(name string, process Process) *Task {
-	return &Task{name: name, process: process}
+func NewTask(name string, processFunc ProcessFunc, middlewares ...Middleware) *Task {
+	return &Task{
+		name:        name,
+		processFunc: processFunc,
+		middlewares: middlewares,
+	}
 }
 
-// String returns the task's name, implementing the fmt.Stringer interface.
-func (task *Task) String() string {
-	return task.Name()
+func (task *Task) Process(ctx context.Context) error {
+	task.ctx, task.cancelFunc = context.WithCancel(ctx)
+	defer task.cancelFunc()
+
+	processFunc := task.processFunc
+	for i := len(task.middlewares) - 1; i >= 0; i-- {
+		processFunc = task.middlewares[i].Middleware(task, processFunc)
+	}
+
+	return processFunc(task.ctx)
 }
 
-// Name returns the task's identifier.
 func (task *Task) Name() string {
 	return task.name
+}
+
+func (task *Task) Close() error {
+	if task.cancelFunc != nil {
+		task.cancelFunc()
+	}
+
+	return nil
 }
