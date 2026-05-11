@@ -9,12 +9,12 @@ var Component = &component.Component{
 	Name: "runner",
 	Init: component.StepFunc(func(container container.Container) error {
 		return container.Provides(
-			NewDefault,
-			func(d *Default) Runner { return d },
+			newRunner,
+			func(r *runner) Runner { return r },
 		)
 	}),
 	Stop: component.StepFunc(func(container container.Container) error {
-		return container.Invoke(func(d *Default) error {
+		return container.Invoke(func(d *runner) error {
 			return d.Close()
 		})
 	}),

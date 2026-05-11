@@ -26,31 +26,30 @@ func NewRestore(config *Config, runner runner.Runner, logger logger.Logger) *Res
 }
 
 func (restore *Restore) Middleware(process runner.Process, next runner.ProcessFunc) runner.ProcessFunc {
-	return func(ctx context.Context) error {
+	return func(ctx context.Context) (err error) {
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		for {
+			err = restore.process(ctx, process, next)
+			if err == nil {
+				return nil
+			}
+
 			select {
 			case <-ctx.Done():
 				return nil
-			default:
-				if err := restore.process(ctx, process, next); err != nil {
-					restore.logger.Errorf("process '%s' failed: %s", process.Name(), err)
-					<-time.After(restore.config.Delay)
-					continue
-				}
+			case <-time.After(restore.config.Delay):
+				continue
 			}
-
-			return nil
 		}
 	}
 }
 
 func (restore *Restore) process(ctx context.Context, process runner.Process, next runner.ProcessFunc) (err error) {
 	defer func() {
-		if errr := recover(); errr != nil {
-			err = fmt.Errorf("process '%s' panic: %s\n%s", process.Name(), errr, debug.Stack())
+		if errp := recover(); errp != nil {
+			err = fmt.Errorf("process '%s' panic: %s\n%s", process.Name(), errp, debug.Stack())
 		}
 	}()
 
