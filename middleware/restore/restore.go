@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Compogo/compogo"
 	"github.com/Compogo/runner"
 )
 
@@ -15,14 +14,12 @@ type Restore struct {
 	config *Config
 
 	runner runner.Runner
-	logger compogo.Logger
 }
 
-func NewRestore(config *Config, runner runner.Runner, logger compogo.Logger) *Restore {
+func NewRestore(config *Config, runner runner.Runner) *Restore {
 	return &Restore{
 		config: config,
 		runner: runner,
-		logger: logger.GetLogger("runner").GetLogger("middleware").GetLogger("restore"),
 	}
 }
 
