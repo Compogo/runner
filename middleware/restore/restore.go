@@ -12,14 +12,11 @@ import (
 // Работает до тех пор, пока не будет отменён контекст.
 type Restore struct {
 	config *Config
-
-	runner runner.Runner
 }
 
-func NewRestore(config *Config, runner runner.Runner) *Restore {
+func NewRestore(config *Config) *Restore {
 	return &Restore{
 		config: config,
-		runner: runner,
 	}
 }
 
