@@ -6,23 +6,45 @@ import (
 	"io"
 	"sync"
 
-	"github.com/Compogo/compogo/closer"
-	"github.com/Compogo/compogo/logger"
+	"github.com/Compogo/compogo"
+	typesErrors "github.com/Compogo/types/errors"
 	"github.com/Compogo/types/linker"
 	"github.com/Compogo/types/set"
 )
 
+// Runner управляет жизненным циклом процессов (Task).
+// Предоставляет возможности:
+//   - Запуска процессов с поддержкой middleware
+//   - Остановки процессов по имени или объекту
+//   - Graceful shutdown через io.Closer
+//   - Проверки наличия процессов
+//
+// Runner потокобезопасен и может использоваться из нескольких горутин.
 type Runner interface {
 	io.Closer
+	// RunProcess запускает один процесс.
 	RunProcess(Process) error
+
+	// RunProcesses запускает несколько процессов.
 	RunProcesses(...Process) error
+
+	// StopProcess останавливает процесс по объекту.
 	StopProcess(Process) error
+
+	// StopProcessByName останавливает процесс по имени.
 	StopProcessByName(string) error
+
+	// HasProcess проверяет наличие процесса по объекту.
 	HasProcess(Process) bool
+
+	// HasProcessByName проверяет наличие процесса по имени.
 	HasProcessByName(string) bool
+
+	// Use добавляет middleware для всех процессов.
 	Use(middlewares ...Middleware)
 }
 
+// runner — внутренняя реализация Runner.
 type runner struct {
 	wg      sync.WaitGroup
 	rwMutex sync.RWMutex
@@ -31,11 +53,12 @@ type runner struct {
 	linkProcesses *linker.Linker[string, Process]
 	middlewares   []Middleware
 
-	closer closer.Closer
-	logger logger.Logger
+	closer compogo.Closer
+	logger compogo.Logger
 }
 
-func newRunner(closer closer.Closer, logger logger.Logger) *runner {
+// newRunner создаёт новый Runner.
+func newRunner(closer compogo.Closer, logger compogo.Logger) *runner {
 	return &runner{
 		processes:     set.NewSet[Process](),
 		linkProcesses: linker.NewLinker[string, Process](linker.KeyStringNormalizer[Process]()),
@@ -95,29 +118,30 @@ func (runner *runner) RunProcess(process Process) (err error) {
 
 	runner.addProcess(process)
 
-	runner.wg.Go(func() {
-		defer func() {
-			if err := runner.StopProcess(process); err != nil && !errors.Is(err, TaskUndefinedError) {
-				runner.logger.Errorf("process '%s' stop failed: %w", process.Name(), err)
+	runner.wg.Go(func(processFunc ProcessFunc) func() {
+		return func() {
+			defer runner.removeProcess(process)
+			if err := processFunc(runner.closer.GetContext()); err != nil {
+				runner.logger.Errorf("process '%s' executed failed: %s", process.Name(), err.Error())
 			}
-		}()
-
-		if err := processFunc(runner.closer.GetContext()); err != nil {
-			runner.logger.Errorf("process '%s' executed failed: %s", process.Name(), err.Error())
 		}
-	})
+	}(processFunc))
 
 	return nil
 }
 
 func (runner *runner) StopProcessByName(name string) error {
-	if !runner.HasProcessByName(name) {
+	runner.rwMutex.Lock()
+	process, err := runner.linkProcesses.Get(name)
+	runner.rwMutex.Unlock()
+
+	if errors.Is(err, typesErrors.DoesNotExistError) {
 		return fmt.Errorf("[runner] task '%s': %w", name, TaskUndefinedError)
 	}
 
-	runner.rwMutex.Lock()
-	process, _ := runner.linkProcesses.Get(name)
-	runner.rwMutex.Unlock()
+	if err != nil {
+		return err
+	}
 
 	return runner.StopProcess(process)
 }

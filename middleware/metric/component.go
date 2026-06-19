@@ -1,20 +1,20 @@
 package metric
 
 import (
-	"github.com/Compogo/compogo/component"
-	"github.com/Compogo/compogo/container"
+	"github.com/Compogo/compogo"
 	"github.com/Compogo/runner"
 )
 
-var Component = &component.Component{
+// Component — компонент middleware метрик для runner.Runner.
+var Component = compogo.Component{
 	Name: "runner.middleware.metric",
-	Dependencies: component.Components{
-		runner.Component,
+	Dependencies: compogo.Components{
+		&runner.Component,
 	},
-	Init: component.StepFunc(func(container container.Container) error {
+	Init: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Provide(NewMetric)
 	}),
-	Configuration: component.StepFunc(func(container container.Container) error {
+	PreExecute: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Invoke(func(r runner.Runner, middleware *Metric) {
 			r.Use(middleware)
 		})

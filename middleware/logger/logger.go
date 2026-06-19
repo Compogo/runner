@@ -2,29 +2,33 @@ package logger
 
 import (
 	"context"
-	"runtime/debug"
 
-	"github.com/Compogo/compogo/logger"
+	"github.com/Compogo/compogo"
 	"github.com/Compogo/runner"
 )
 
+// Logger — middleware для логирования выполнения процессов.
+// Логирует:
+//   - Начало выполнения процесса
+//   - Успешное завершение
+//   - Ошибки
 type Logger struct {
-	logger logger.Logger
+	logger compogo.Logger
 }
 
-func NewLogger(logger logger.Logger) *Logger {
+func NewLogger(logger compogo.Logger) *Logger {
 	return &Logger{logger: logger.GetLogger("runner").GetLogger("middleware").GetLogger("logger")}
 }
 
 func (m *Logger) Middleware(process runner.Process, next runner.ProcessFunc) runner.ProcessFunc {
 	return func(ctx context.Context) (err error) {
-		m.logger.Infof("task '%s' running", process.Name())
+		m.logger.Infof("process '%s' running", process.Name())
 
 		if err = next(ctx); err != nil {
-			m.logger.Errorf("task '%s' error: %s\n%s", process.Name(), err, debug.Stack())
+			m.logger.Errorf("process '%s' error: %s", process.Name(), err)
 		}
 
-		m.logger.Infof("task '%s' shutdown", process.Name())
+		m.logger.Infof("process '%s' shutdown", process.Name())
 
 		return err
 	}

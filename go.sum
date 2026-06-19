@@ -1,9 +1,15 @@
 github.com/Compogo/compogo v0.0.33 h1:1PQVrobHEj6lFJyfGswBU97mwo/10YLTflu/txKnj1s=
 github.com/Compogo/compogo v0.0.33/go.mod h1:Nwz8DqfcABMaEcJ5Ns2xEC7lFt22KRd+jLfl9Gek9d4=
+github.com/Compogo/compogo v1.0.0-rc1 h1:hmcjMsBQV2caVF/SW1Y7QptEugUUGxZumFQpY31eKmU=
+github.com/Compogo/compogo v1.0.0-rc1/go.mod h1:mIsLHoKoB61FcTHQ6Gh79DXyXpMyZgAj32XeytuBksQ=
 github.com/Compogo/tools v0.0.1 h1:oEsD838gwG4xAbKkWerRViLp4Gi+fqT07MJRucDL3vY=
 github.com/Compogo/tools v0.0.1/go.mod h1:WMC6OW6nB8hsEMMa/1BR0/CWcDVAfg8Bj2+K08Ufcy4=
+github.com/Compogo/tools v1.0.0 h1:Ltcfy70mK3qjOPdOygb3y5/vvUC611Ci+vI2JVmd86Q=
+github.com/Compogo/tools v1.0.0/go.mod h1:maqYz4W55hyPl9PNT6YsIhoZCt8zbzSsUDCRrN3KRY4=
 github.com/Compogo/types v0.0.15 h1:qWOnDEyM6uJMFIA9pPYtxteCA8WmpUIGjcsbJaTu4l8=
 github.com/Compogo/types v0.0.15/go.mod h1:2wj58tE4RGlT4JsrN9s+M/kdJ4guUOma+jCXNB3WsB4=
+github.com/Compogo/types v1.0.0 h1:GdzqeGrV9CUuY7Mg6Z7Xpi4otlS3us2wPOX1kEhhATc=
+github.com/Compogo/types v1.0.0/go.mod h1:wESqB/vlZAKikW/ad9pc/eZ+CHMgPVeY0HXgOtD6x1g=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=

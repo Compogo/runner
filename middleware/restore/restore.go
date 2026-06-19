@@ -2,22 +2,23 @@ package restore
 
 import (
 	"context"
-	"fmt"
-	"runtime/debug"
 	"time"
 
-	"github.com/Compogo/compogo/logger"
+	"github.com/Compogo/compogo"
 	"github.com/Compogo/runner"
 )
 
+// Restore — middleware для автоматического восстановления процессов.
+// При ошибке выполнения процесса перезапускает его с задержкой.
+// Работает до тех пор, пока не будет отменён контекст.
 type Restore struct {
 	config *Config
 
 	runner runner.Runner
-	logger logger.Logger
+	logger compogo.Logger
 }
 
-func NewRestore(config *Config, runner runner.Runner, logger logger.Logger) *Restore {
+func NewRestore(config *Config, runner runner.Runner, logger compogo.Logger) *Restore {
 	return &Restore{
 		config: config,
 		runner: runner,
@@ -25,13 +26,13 @@ func NewRestore(config *Config, runner runner.Runner, logger logger.Logger) *Res
 	}
 }
 
-func (restore *Restore) Middleware(process runner.Process, next runner.ProcessFunc) runner.ProcessFunc {
+func (restore *Restore) Middleware(_ runner.Process, next runner.ProcessFunc) runner.ProcessFunc {
 	return func(ctx context.Context) (err error) {
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
 		for {
-			err = restore.process(ctx, process, next)
+			err = next(ctx)
 			if err == nil {
 				return nil
 			}
@@ -44,14 +45,4 @@ func (restore *Restore) Middleware(process runner.Process, next runner.ProcessFu
 			}
 		}
 	}
-}
-
-func (restore *Restore) process(ctx context.Context, process runner.Process, next runner.ProcessFunc) (err error) {
-	defer func() {
-		if errp := recover(); errp != nil {
-			err = fmt.Errorf("process '%s' panic: %s\n%s", process.Name(), errp, debug.Stack())
-		}
-	}()
-
-	return next(ctx)
 }

@@ -2,12 +2,11 @@ package runner
 
 import "errors"
 
+// Ошибки, возвращаемые при работе с Runner.
 var (
-	// TaskAlreadyExistsError is returned when attempting to run a task that is
-	// already registered and running.
+	// TaskAlreadyExistsError возникает при попытке запустить уже существующий процесс.
 	TaskAlreadyExistsError = errors.New("task already exists")
 
-	// TaskUndefinedError is returned when attempting to stop a task that is not
-	// registered or has already completed.
+	// TaskUndefinedError возникает при попытке остановить несуществующий процесс.
 	TaskUndefinedError = errors.New("task is undefined")
 )

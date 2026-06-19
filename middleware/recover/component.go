@@ -1,20 +1,20 @@
 package recover
 
 import (
-	"github.com/Compogo/compogo/component"
-	"github.com/Compogo/compogo/container"
+	"github.com/Compogo/compogo"
 	"github.com/Compogo/runner"
 )
 
-var Component = &component.Component{
+// Component — компонент middleware восстановления после паник для runner.Runner.
+var Component = &compogo.Component{
 	Name: "runner.middleware.recover",
-	Dependencies: component.Components{
-		runner.Component,
+	Dependencies: compogo.Components{
+		&runner.Component,
 	},
-	Init: component.StepFunc(func(container container.Container) error {
+	Init: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Provide(NewRecover)
 	}),
-	Configuration: component.StepFunc(func(container container.Container) error {
+	PreExecute: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Invoke(func(r runner.Runner, middleware *Recover) {
 			r.Use(middleware)
 		})

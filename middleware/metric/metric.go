@@ -9,6 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+// Metric — middleware для сбора метрик Prometheus.
+// Считает количество запусков процессов.
 type Metric struct {
 	counter prometheus.Counter
 }

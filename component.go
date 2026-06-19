@@ -1,19 +1,20 @@
 package runner
 
 import (
-	"github.com/Compogo/compogo/component"
-	"github.com/Compogo/compogo/container"
+	"github.com/Compogo/compogo"
 )
 
-var Component = &component.Component{
+// Component — компонент Runner для Compogo.
+// Регистрирует Runner в DI-контейнере и останавливает его при завершении приложения.
+var Component = compogo.Component{
 	Name: "runner",
-	Init: component.StepFunc(func(container container.Container) error {
+	Init: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Provides(
 			newRunner,
 			func(r *runner) Runner { return r },
 		)
 	}),
-	Stop: component.StepFunc(func(container container.Container) error {
+	Stop: compogo.StepFunc(func(container compogo.Container) error {
 		return container.Invoke(func(d *runner) error {
 			return d.Close()
 		})
